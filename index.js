@@ -81,6 +81,7 @@ function except(data, fields) {
   return data;
 }
 
+// TODO: handle '$'
 function select(data, fields) {
   if (!fields) return data;
 

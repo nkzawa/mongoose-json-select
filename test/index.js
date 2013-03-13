@@ -127,7 +127,7 @@ describe('json-select', function() {
         name: String,
         users: [schema]
       });
-      groupSchema.plugin(jsonSelect, '_id name users.$.username');
+      groupSchema.plugin(jsonSelect, '_id name users.username');
       Group = model('Group', groupSchema);
       group = new Group({name: 'foo', users: [user]});
 
@@ -159,6 +159,32 @@ describe('json-select', function() {
         name: group.name,
         users: [{username: user.username}]
       });
+    });
+  });
+
+  describe('pick', function() {
+    it('should get a value from a nested object', function() {
+      var obj = {a: {b: {c: 'foo'}}},
+        data = jsonSelect.pick(obj, 'a.b.c');
+
+      expect(data).to.eql('foo');
+    });
+
+    it('should get values from a array', function() {
+      var obj = {a: [{b: 'b1', c: 'c1'}, {b: 'b2', c: 'c2'}]},
+        data = jsonSelect.pick(obj, 'a.b');
+
+      expect(data).to.eql(['b1', 'b2']);
+    });
+
+    it('should get values from nested arrays', function() {
+      var obj = {a: [
+          [{b: 'b1', c: 'c1'}, {b: 'b2', c: 'c2'}],
+          [{b: 'b3', c: 'c3'}, {b: 'b4', c: 'c4'}]
+        ]},
+        data = jsonSelect.pick(obj, 'a.b');
+
+      expect(data).to.eql([['b1', 'b2'], ['b3', 'b4']]);
     });
   });
 });

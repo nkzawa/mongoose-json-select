@@ -2,18 +2,6 @@ var mongoose = require('mongoose'),
   _toJSON = mongoose.Document.prototype.toJSON;
 
 
-function clone(obj) {
-  var _obj = {}, k;
-
-  for (k in obj) {
-    if (obj.hasOwnProperty(k)) {
-      _obj[k] = obj[k];
-    }
-  }
-
-  return _obj;
-}
-
 function normalizeFields(fields) {
   if (!fields) return;
 
@@ -31,9 +19,9 @@ function normalizeFields(fields) {
       _fields[field] = include;
     });
     return _fields;
-  } else {
-    throw new TypeError('Invalid select fields. Must be a string or object.');
   }
+
+  throw new TypeError('Invalid select fields. Must be a string or object.');
 }
 
 function only(data, fields) {
@@ -81,13 +69,28 @@ function except(data, fields) {
   return data;
 }
 
+function pick(data, field) {
+  var parts = field.split('.'),
+    _field = parts[0],
+    value;
+
+  value = Array.isArray(data) ? data.map(function(v) {
+    return pick(v, _field);
+  }) : data && data[_field];
+
+  if (parts.length > 1) {
+    value = pick(value, parts.slice(1).join('.'));
+  }
+
+  return value;
+}
+
 // TODO: handle '$'
 function select(data, fields) {
   if (!fields) return data;
 
   var inclusive = [],
-    exclusive = [],
-    selected;
+    exclusive = [];
 
   fields = normalizeFields(fields);
 
@@ -95,16 +98,27 @@ function select(data, fields) {
     (fields[field] ? inclusive : exclusive).push(field);
   });
 
-  selected = only(data, inclusive);
-  selected = except(selected, exclusive);
-  return selected;
+  return except(only(data, inclusive), exclusive);
 }
 
-module.exports = function(schema, fields) {
+function clone(obj) {
+  var _obj = {}, k;
+
+  for (k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      _obj[k] = obj[k];
+    }
+  }
+
+  return _obj;
+}
+
+
+exports = module.exports = function(schema, fields) {
   var methods = schema.methods,
     toJSON = methods.toJSON || _toJSON;
 
-  // NOTE: toJSON would share a same options for every subdocuments.
+  // NOTE: toJSON calls toJSON with a same option recursively for all subdocuments.
   methods.toJSON = function(options) {
     var schemaOptions = this.schema.options.toJSON,
       _options = options || schemaOptions || {},
@@ -114,13 +128,15 @@ module.exports = function(schema, fields) {
     _options = clone(_options);
 
     if (!options) {
-      // called directly without options, then use default fields.
+      // use default fields in all subdocuments.
       delete _options.select;
-    } else if ('select' in options) {
+    } else if ('undefined' !== typeof options.select) {
+      // fields are specified directly, then don't limit fields in all subdocuments.
       if (options.select) {
-        // options specified, then don't apply 'select' to all subdocuments.
+        // the route for an original document
         _options.select = null;
       } else {
+        // the route for all subdocuments
         _fields = null;
       }
     }
@@ -130,4 +146,6 @@ module.exports = function(schema, fields) {
   };
 };
 
+exports.select = select;
+exports.pick = pick;
 

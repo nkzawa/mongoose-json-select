@@ -36,22 +36,23 @@ function emptyObject(obj) {
   }
 }
 
-// copy a value of 'field' from 'src' to 'dst' recursively
+// copy a value recursively
 function pick(src, dst, field) {
+  if (!src || !dst) return;
+
   if (util.isArray(src)) {
     pickArray(src, dst, field);
     return;
   }
 
-  var parts = field.split('.'),
-    _field = parts[0],
+  var _field = field[0],
     _src, _dst;
 
-  if (!src || !(_field in src)) return;
+  if (!(_field in src)) return;
   _src = src[_field];
 
-  if (parts.length > 1) {
-    if (dst && _field in dst) {
+  if (field.length > 1) {
+    if (_field in dst) {
       // get a reference when a value already exists
       _dst = dst[_field];
     } else {
@@ -61,10 +62,8 @@ function pick(src, dst, field) {
       }
     }
 
-    if (_src && _dst) {
-      // continue to search nested objects
-      pick(_src, _dst, parts.slice(1).join('.'));
-    }
+    // continue to search nested objects
+    pick(_src, _dst, field.slice(1));
     return;
   }
 
@@ -80,17 +79,16 @@ function pickArray(src, dst, field) {
 
     if (dst.length > i) {
       _dst = dst[i];
+      i++;
     } else {
       _dst = emptyObject(_src);
       if (_dst) {
         dst.push(_dst);
+        i++;
       }
     }
 
-    if (_src && _dst) {
-      pick(_src, _dst, field);
-      i++;
-    }
+    pick(_src, _dst, field);
   });
 }
 
@@ -100,31 +98,42 @@ function only(data, fields) {
   var _data = {};
 
   fields.forEach(function(field) {
-    pick(data, _data, field);
+    pick(data, _data, field.split('.'));
   });
 
   return _data;
 }
 
+// delete a value recursively
+function omit(data, field) {
+  if (!data) return;
+
+  if (util.isArray(data)) {
+    data.forEach(function(_data) {
+      omit(_data, field);
+    });
+    return;
+  }
+
+  var _field = field[0];
+  if (field.length > 1) {
+    omit(data[_field], field.slice(1));
+    return;
+  }
+
+  if (data.constructor.name === 'Object') {
+    delete data[_field];
+  }
+}
+
 function except(data, fields) {
-  data = clone(data);
+  var _data = clone(data);
 
   fields.forEach(function(field) {
-    var parts = field.split('.'),
-      last = parts.length - 1,
-      value = data;
-
-    parts.forEach(function(part, i) {
-      if (i === last) {
-        delete value[part];
-        return;
-      }
-
-      value = value && value[part];
-    });
+    omit(_data, field.split('.'));
   });
 
-  return data;
+  return _data;
 }
 
 function select(data, fields) {

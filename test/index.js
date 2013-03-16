@@ -28,8 +28,8 @@ function userSchema() {
 describe('json-select', function() {
 
   var fieldsList = [
-      '_id username name.first name.last created',
-      {_id: 1, username:1, 'name.first': 1, 'name.last': 1, created: 1},
+      'username name.first name.last created',
+      {username:1, 'name.first': 1, 'name.last': 1, created: 1},
       '-password -emails',
       {password: 0, emails: 0}
     ],
@@ -88,6 +88,18 @@ describe('json-select', function() {
     });
   });
 
+  it('should be able to exclude "_id"', function() {
+    var schema = userSchema(),
+      User, user;
+
+    schema.plugin(jsonSelect, '-_id username');
+
+    User = model(schema);
+    user = new User(userData);
+
+    expect(user.toJSON()).to.eql({username: user.username});
+  });
+
   it('should handle getters', function() {
     var schema = userSchema(),
       User, user;
@@ -105,6 +117,7 @@ describe('json-select', function() {
     user = new User(userData);
 
     expect(user.toJSON()).to.eql({
+      _id: user._id,
       username: user.username,
       name: {full: user.name.full}
     });
@@ -138,7 +151,7 @@ describe('json-select', function() {
         name: String,
         users: [schema]
       });
-      groupSchema.plugin(jsonSelect, '_id name users.username');
+      groupSchema.plugin(jsonSelect, 'name users.username');
       Group = model('Group', groupSchema);
       group = new Group({name: 'foo', users: [user]});
 
@@ -168,7 +181,10 @@ describe('json-select', function() {
       expect(group.toJSON()).to.eql({
         _id: group._id,
         name: group.name,
-        users: [{username: user.username}]
+        users: [{
+          _id: user._id,
+          username: user.username
+        }]
       });
     });
   });
@@ -185,7 +201,7 @@ describe('json-select', function() {
         body: String,
         _user: {type: Schema.ObjectId, ref: 'User'}
       });
-      commentSchema.plugin(jsonSelect, '_id body _user.username');
+      commentSchema.plugin(jsonSelect, 'body _user.username');
       Comment = model('Comment', commentSchema);
       comment = new Comment({body: 'foo', _user: user});
       // emulate population
@@ -219,7 +235,10 @@ describe('json-select', function() {
       expect(comment.toJSON()).to.eql({
         _id: comment._id,
         body: comment.body,
-        _user: {username: user.username}
+        _user: {
+          _id: user._id,
+          username: user.username
+        }
       });
     });
   });

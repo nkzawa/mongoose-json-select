@@ -152,6 +152,17 @@ function select(data, fields) {
   return exclusive.length ? except(data, exclusive) : data;
 }
 
+// include "_id" by default
+function setDefault(fields) {
+  if ('_id' in fields) return;
+
+  var hasInclusion = Object.keys(fields).some(function(f) {
+      return fields[f];
+    });
+  if (hasInclusion) {
+    fields._id = 1;
+  }
+}
 
 exports = module.exports = function(schema, fields) {
   var methods = schema.methods,
@@ -181,7 +192,11 @@ exports = module.exports = function(schema, fields) {
     }
 
     obj = toJSON.call(this, _options);
-    return _fields ? select(obj, _fields) : obj;
+    if (!_fields) return obj;
+
+    _fields = normalizeFields(_fields);
+    setDefault(_fields);
+    return select(obj, _fields);
   };
 };
 

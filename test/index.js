@@ -88,6 +88,28 @@ describe('json-select', function() {
     });
   });
 
+  it('should handle getters', function() {
+    var schema = userSchema(),
+      User, user;
+
+    schema.plugin(jsonSelect, 'username name.full');
+    schema.set('toJSON', {getters: true});
+    schema.path('username').get(function(v) {
+      return v && v.toUpperCase();
+    });
+    schema.virtual('name.full').get(function() {
+      return [this.name.first, this.name.last].join(' ');
+    });
+
+    User = model(schema);
+    user = new User(userData);
+
+    expect(user.toJSON()).to.eql({
+      username: user.username,
+      name: {full: user.name.full}
+    });
+  });
+
   it('should call original toJSON', function() {
     var schema = userSchema(),
       username = 'xformed',

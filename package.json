@@ -13,6 +13,9 @@
   "scripts": {
     "test": "node_modules/.bin/mocha --reporter dot"
   },
+  "dependencies": {
+    "clone": "0.1.6"
+  },
   "devDependencies": {
     "mocha": "*",
     "chai": "*",

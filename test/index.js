@@ -116,7 +116,7 @@ describe('json-select', function() {
   });
 
   describe('embeded documents', function() {
-    it.skip('should handle subdocuments', function() {
+    it('should handle subdocuments', function() {
       var schema = userSchema(),
         User, user, groupSchema, Group, group;
 
@@ -162,29 +162,24 @@ describe('json-select', function() {
     });
   });
 
-  describe('pick', function() {
-    it('should get a value from a nested object', function() {
-      var obj = {a: {b: {c: 'foo'}}},
-        data = jsonSelect.pick(obj, 'a.b.c');
+  describe('select', function() {
+    it('should pick array with contents', function() {
+      var obj = {a: ['foo', 'bar']},
+        data;
 
-      expect(data).to.eql('foo');
+      data = jsonSelect.select(obj, 'a');
+      expect(data).to.eql({a: ['foo', 'bar']});
     });
 
-    it('should get values from a array', function() {
-      var obj = {a: [{b: 'b1', c: 'c1'}, {b: 'b2', c: 'c2'}]},
-        data = jsonSelect.pick(obj, 'a.b');
-
-      expect(data).to.eql(['b1', 'b2']);
-    });
-
-    it('should get values from nested arrays', function() {
+    it('should leave only objects and arrays in a array', function() {
       var obj = {a: [
-          [{b: 'b1', c: 'c1'}, {b: 'b2', c: 'c2'}],
-          [{b: 'b3', c: 'c3'}, {b: 'b4', c: 'c4'}]
+          {b: 'foo'}, {b:'bar', c: true}, [{b: 'baz'}],
+          null, false, 1, 'str', new Date(), [], {}
         ]},
-        data = jsonSelect.pick(obj, 'a.b');
+        data;
 
-      expect(data).to.eql([['b1', 'b2'], ['b3', 'b4']]);
+      data = jsonSelect.select(obj, 'a.b');
+      expect(data).to.eql({a:[{b: 'foo'}, {b:'bar'}, [{b: 'baz'}], [], {}]});
     });
   });
 });

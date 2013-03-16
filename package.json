@@ -1,10 +1,11 @@
 {
   "name": "mongoose-json-select",
-  "version": "0.1.0",
-  "description": "a mongoose plugin to limit json attributes",
+  "version": "0.2.0",
+  "description": "a mongoose plugin to limit json fields",
   "author": "Naoyuki Kanezawa <naoyuki.kanezawa@gmail.com>",
   "keywords": [
-    "mongoose", "json", "plugin", "mongodb", "select", "attributes"
+    "mongoose", "json", "plugin", "mongodb",
+    "toJSON", "select", "limit", "filter"
   ],
   "repository": {
     "type": "git",

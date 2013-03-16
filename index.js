@@ -148,7 +148,8 @@ function select(data, fields) {
     (fields[field] ? inclusive : exclusive).push(field);
   });
 
-  return except(only(data, inclusive), exclusive);
+  data = inclusive.length ? only(data, inclusive) : data;
+  return exclusive.length ? except(data, exclusive) : data;
 }
 
 

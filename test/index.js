@@ -1,6 +1,7 @@
 var expect = require('chai').expect,
   mongoose = require('mongoose'),
-  jsonSelect = require('../');
+  jsonSelect = require('../'),
+  Schema = mongoose.Schema;
 
 
 function model(name, schema) {
@@ -12,7 +13,7 @@ function model(name, schema) {
 }
 
 function userSchema() {
-  return mongoose.Schema({
+  return Schema({
     username: String,
     password: String,
     name: {
@@ -87,18 +88,6 @@ describe('json-select', function() {
     });
   });
 
-  it('should be able to mix inclusion and exclusion', function() {
-    var schema = userSchema(),
-      User, user;
-
-    schema.plugin(jsonSelect, 'name -name.last');
-
-    User = model(schema);
-    user = new User(userData);
-
-    expect(user.toJSON()).to.eql({name: {first: user.name.first}});
-  });
-
   it('should call original toJSON', function() {
     var schema = userSchema(),
       username = 'xformed',
@@ -116,14 +105,14 @@ describe('json-select', function() {
   });
 
   describe('embeded documents', function() {
-    it('should handle subdocuments', function() {
+    it('should limit fields of embeded documents', function() {
       var schema = userSchema(),
         User, user, groupSchema, Group, group;
 
       User = model('User', schema);
       user = new User(userData);
 
-      groupSchema = mongoose.Schema({
+      groupSchema = Schema({
         name: String,
         users: [schema]
       });
@@ -138,7 +127,7 @@ describe('json-select', function() {
       });
     });
 
-    it('should handle subdocuments', function() {
+    it('should respect options of embeded documents', function() {
       var schema = userSchema(),
         User, user, groupSchema, Group, group;
 
@@ -147,7 +136,7 @@ describe('json-select', function() {
       User = model('User', schema);
       user = new User(userData);
 
-      groupSchema = mongoose.Schema({
+      groupSchema = Schema({
         name: String,
         users: [schema]
       });
@@ -162,7 +151,65 @@ describe('json-select', function() {
     });
   });
 
+  describe('populated documents', function() {
+    it('should limit fields of subdocuments', function() {
+      var schema = userSchema(),
+        User, user, commentSchema, Comment, comment;
+
+      User = model('User', schema);
+      user = new User(userData);
+
+      commentSchema = Schema({
+        body: String,
+        _user: {type: Schema.ObjectId, ref: 'User'}
+      });
+      commentSchema.plugin(jsonSelect, '_id body _user.username');
+      Comment = model('Comment', commentSchema);
+      comment = new Comment({body: 'foo', _user: user});
+      // emulate population
+      comment.setValue('_user', user);
+
+      expect(comment.toJSON()).to.eql({
+        _id: comment._id,
+        body: comment.body,
+        _user: {username: user.username}
+      });
+    });
+
+    it('should respect options of subdocuments', function() {
+      var schema = userSchema(),
+        User, user, commentSchema, Comment, comment;
+
+      schema.plugin(jsonSelect, 'username');
+
+      User = model('User', schema);
+      user = new User(userData);
+
+      commentSchema = Schema({
+        body: String,
+        _user: {type: Schema.ObjectId, ref: 'User'}
+      });
+      Comment = model('Comment', commentSchema);
+      comment = new Comment({body: 'foo', _user: user});
+      // emulate population
+      comment.setValue('_user', user);
+
+      expect(comment.toJSON()).to.eql({
+        _id: comment._id,
+        body: comment.body,
+        _user: {username: user.username}
+      });
+    });
+  });
+
   describe('select', function() {
+    it('should be able to mix inclusion and exclusion', function() {
+      var obj = {a: {b: 'foo', c: 'bar'}},
+        data = jsonSelect.select(obj, 'a -a.b');
+
+      expect(data).to.eql({a: {c: 'bar'}});
+    });
+
     it('should pick array with contents', function() {
       var obj = {a: ['foo', 'bar']},
         data;
@@ -171,7 +218,7 @@ describe('json-select', function() {
       expect(data).to.eql({a: ['foo', 'bar']});
     });
 
-    it('should leave only objects and arrays in a array', function() {
+    it('should pick only objects and arrays in a array', function() {
       var obj = {a: [
           {b: 'foo'}, {b:'bar', c: true}, [{b: 'baz'}],
           null, false, 1, 'str', new Date(), [], {}
@@ -180,6 +227,18 @@ describe('json-select', function() {
 
       data = jsonSelect.select(obj, 'a.b');
       expect(data).to.eql({a:[{b: 'foo'}, {b:'bar'}, [{b: 'baz'}], [], {}]});
+    });
+
+    it('should omit values only from objects in a array', function() {
+      var date = new Date(),
+        obj = {a: [
+          {b: 'foo'}, {b:'bar', c: true}, [{b: 'baz'}],
+          null, false, 1, 'str', date, [], {}
+        ]},
+        data;
+
+      data = jsonSelect.select(obj, '-a.b');
+      expect(data).to.eql({a:[{}, {c:true}, [{}], null, false, 1, 'str', date, [], {}]});
     });
   });
 });

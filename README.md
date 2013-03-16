@@ -6,9 +6,12 @@ A mongoose plugin to limit JSON properties.
 ```js
 var jsonSelect = require('mongoose-json-select');
 
-var schema = Schema({name: String, email: String, created: {type: Date, default: Date.now}});
+var schema = Schema({
+  name: String,
+  email: String,
+  created: {type: Date, default: Date.now}
+});
 schema.plugin(jsonSelect, 'name created');
-// or schema.plugin(jsonSelect, '-email');
 var User = mongoose.model('User', schema);
 
 var user = User({name: 'alice', email: 'alice@example.com'});
@@ -22,13 +25,13 @@ JSON.stringify(user);
 ## Documentation
 Inclusion/Exclusion
 ```js
-// inclusion
+// inclusion. these are equivalent
 schema.plugin(jsonSelect, 'name.first');
-schema.plugin(jsonSelect, {'name.first': 1}); // equivalent
+schema.plugin(jsonSelect, {'name.first': 1});
 
-// exclusion
+// exclusion. these are equivalent
 schema.plugin(jsonSelect, '-name.last');
-schema.plugin(jsonSelect, {'name.last': 0}); // equivalent
+schema.plugin(jsonSelect, {'name.last': 0});
 ```
 
 Always includes _id field if the field is not excluded explicitly.
@@ -45,7 +48,7 @@ schema.options.toJSON = {select: 'name'};
 
 Specifies fields when calling toJSON.
 ```js
-// this overrides default configuration
+// this overrides a default configuration
 JSON.stringify(doc.toJSON({select: 'name email'}));
 ```
 

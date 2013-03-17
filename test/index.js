@@ -84,7 +84,7 @@ describe('json-select', function() {
       User = model(schema);
       user = new User(userData);
 
-      expect(user.toJSON({select: fields, transform: true})).to.eql(expected(user));
+      expect(user.toJSON({select: fields})).to.eql(expected(user));
     });
   });
 

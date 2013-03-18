@@ -16,13 +16,13 @@ var User = mongoose.model('User', schema);
 
 var user = User({name: 'alice', email: 'alice@example.com'});
 JSON.stringify(user);
-// -> '{"_id": "xxxxxxxxxx", "name": "alice", "created": "2013-03-16T16:08:38.065Z"}'
+// -> '{"_id": "51466baedf03a52e9b000001", "name": "alice", "created": "2013-03-16T16:08:38.065Z"}'
 ```
 
 ## Installation
     $ npm install mongoose-json-select
 
-## Documentation
+## Usage
 Inclusion/Exclusion
 ```js
 // inclusion. these are equivalent
@@ -43,7 +43,9 @@ Configures default fields as a plugin option or schema option.
 ```js
 // these are equivalent
 schema.plugin(jsonSelect, 'name');
-schema.options.toJSON = {select: 'name'};
+
+schema.plugin(jsonSelect);
+schema.set('toJSON', {select: 'name'});
 ```
 
 Specifies fields when calling toJSON.
@@ -52,19 +54,19 @@ Specifies fields when calling toJSON.
 JSON.stringify(doc.toJSON({select: 'name email'}));
 ```
 
-The syntax for fields is almost same with mongoose's Query#select.
+The syntax for fields is the same with mongoose's Query#select.
 
 http://mongoosejs.com/docs/api.html#query_Query-select
 
 
-## Utils
+## Documentation
 
 ### select(obj, fields)
 Creates a deep clone of 'obj' filtered by 'fields'.
 
 ```js
-var jsonSelect = require('mongoose-json-select');
-jsonSelect.select({a: {b: 'foo'}, c: 'bar'}, 'a.b');
+var select = require('mongoose-json-select').select;
+select({a: {b: 'foo'}, c: 'bar'}, 'a.b');
 // -> {a: {b: 'foo'}}
 ```
 

@@ -67,7 +67,7 @@ describe('json-select', function() {
         User, user;
 
       schema.plugin(jsonSelect);
-      schema.options.toJSON = {select: fields};
+      schema.set('toJSON', {select: fields});
 
       User = model(schema);
       user = new User(userData);

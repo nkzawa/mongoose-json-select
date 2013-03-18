@@ -17,6 +17,9 @@ var User = mongoose.model('User', schema);
 var user = User({name: 'alice', email: 'alice@example.com'});
 JSON.stringify(user);
 // -> '{"_id": "51466baedf03a52e9b000001", "name": "alice", "created": "2013-03-16T16:08:38.065Z"}'
+
+JSON.stringify(user.toJSON({select: 'name email'}));
+// -> '{"_id": "51466baedf03a52e9b000001", "name": "alice", "email": "alice@example.com"}'
 ```
 
 ## Installation

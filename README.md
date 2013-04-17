@@ -1,5 +1,6 @@
 # mongoose-json-select
 [![Build Status](https://travis-ci.org/nkzawa/mongoose-json-select.png?branch=master)](https://travis-ci.org/nkzawa/mongoose-json-select)
+[![NPM version](https://badge.fury.io/js/mongoose-json-select.png)](http://badge.fury.io/js/mongoose-json-select)
 
 A mongoose plugin to limit JSON properties.
 

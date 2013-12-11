@@ -15,7 +15,7 @@
     "test": "node_modules/.bin/mocha --reporter dot"
   },
   "dependencies": {
-    "clone": "0.1.9"
+    "clone": "0.1.11"
   },
   "devDependencies": {
     "mocha": "*",
